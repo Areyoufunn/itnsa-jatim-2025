@@ -4,12 +4,22 @@
     name: [postfix, dovecot-imapd, dovecot-ldap, mailutils]
     state: present
     update_cache: true
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 - name: Configurasi postfix main.cf
   ansible.builtin.template:
     src: main.cf.j2
     dest: /etc/postfix/main.cf
   notify: restart postfix
+
+- name: Buat vmailbox map
+  ansible.builtin.copy:
+    dest: /etc/postfix/vmailbox
+    content: |
+      boaz.salossa@itnsa.id    itnsa.id/boaz/Maildir/
+      budi.sudarsono@itnsa.id  itnsa.id/budi/Maildir/
+  notify: postmap vmailbox
 
 - name: Konfigurasi dovecot
   ansible.builtin.template:
@@ -23,10 +33,20 @@
     dest: /etc/dovecot/dovecot-ldap.conf
   notify: restart dovecot
 
+- name: Buat user vmail (uid/gid 5000)
+  ansible.builtin.user:
+    name: vmail
+    uid: 5000
+    home: /var/mail/vhosts
+    create_home: true
+    shell: /usr/sbin/nologin
+
 - name: Buat Maildir untuk budi dan boaz
   ansible.builtin.file:
     path: "/var/mail/vhosts/itnsa.id/{{ item }}/Maildir"
     state: directory
+    owner: vmail
+    group: vmail
     mode: '0755'
   loop: [budi, boaz]
 
@@ -36,14 +56,3 @@
     state: started
     enabled: true
   loop: [postfix, dovecot]
-
-handlers:
-  - name: restart postfix
-    ansible.builtin.service:
-      name: postfix
-      state: restarted
-
-  - name: restart dovecot
-    ansible.builtin.service:
-      name: dovecot
-      state: restarted

@@ -11,6 +11,6 @@ vrrp_instance VI_1 {
     }
 
     virtual_ipaddress {
-        {{ ip_vrrp }}/24
+        {{ ip_vrrp }}/24 dev eth0
     }
 }

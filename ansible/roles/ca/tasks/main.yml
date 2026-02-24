@@ -22,11 +22,24 @@
       openssl req -new -x509 -key {{ ca_dir }}/ca.key
       -out {{ ca_dir }}/ca.pem -days 3650
       -subj "/C=ID/ST=Jakarta/O=ITNSA/CN=ITNSA Root CA"
-      -addext "keyUsage=critical,keyCertSign"
-      -addext "basicConstraints=critical,CA:TRUE"
     creates: "{{ ca_dir }}/ca.pem"
 
 # === Web Certificate (SAN: www.itnsa.id, www.int.itnsa.id) ===
+- name: Create web SAN config
+  ansible.builtin.copy:
+    dest: "{{ ca_dir }}/web-san.cnf"
+    content: |
+      [req]
+      distinguished_name = req_dn
+      req_extensions = v3_req
+      prompt = no
+      [req_dn]
+      C = ID
+      O = ITNSA
+      CN = www.itnsa.id
+      [v3_req]
+      subjectAltName = DNS:www.itnsa.id,DNS:www.int.itnsa.id
+
 - name: Generate web private key
   ansible.builtin.command:
     cmd: openssl genrsa -out {{ ca_dir }}/web.key 2048
@@ -37,17 +50,16 @@
     cmd: >
       openssl req -new -key {{ ca_dir }}/web.key
       -out {{ ca_dir }}/web.csr
-      -subj "/C=ID/O=ITNSA/CN=www.itnsa.id"
-      -addext "subjectAltName=DNS:www.itnsa.id,DNS:www.int.itnsa.id"
+      -config {{ ca_dir }}/web-san.cnf
     creates: "{{ ca_dir }}/web.csr"
 
-- name: Sign web certificate
+- name: Sign web certificate with SAN
   ansible.builtin.command:
     cmd: >
       openssl x509 -req -in {{ ca_dir }}/web.csr
       -CA {{ ca_dir }}/ca.pem -CAkey {{ ca_dir }}/ca.key
       -CAcreateserial -out {{ ca_dir }}/web.pem -days 365
-      -extensions v3_req -extfile <(printf "[v3_req]\nsubjectAltName=DNS:www.itnsa.id,DNS:www.int.itnsa.id")
+      -extensions v3_req -extfile {{ ca_dir }}/web-san.cnf
     creates: "{{ ca_dir }}/web.pem"
 
 # === Mail Certificate ===
@@ -71,14 +83,3 @@
       -CA {{ ca_dir }}/ca.pem -CAkey {{ ca_dir }}/ca.key
       -CAcreateserial -out {{ ca_dir }}/mail.pem -days 365
     creates: "{{ ca_dir }}/mail.pem"
-
-# === Install CA ke semua server (dijalankan via delegate) ===
-- name: Copy CA cert to trust store
-  ansible.builtin.copy:
-    src: "{{ ca_dir }}/ca.pem"
-    dest: /usr/local/share/ca-certificates/itnsa-root-ca.crt
-    remote_src: true
-
-- name: Update CA certificates
-  ansible.builtin.command:
-    cmd: update-ca-certificates

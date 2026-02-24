@@ -4,6 +4,8 @@
     name: [slapd, ldap-utils]
     state: present
     update_cache: true
+  environment:
+    DEBIAN_FRONTEND: noninteractive
 
 - name: Set slapd password
   ansible.builtin.debconf:
@@ -11,6 +13,27 @@
     question: slapd/password1
     value: "Skills39!"
     vtype: password
+
+- name: Set slapd password confirm
+  ansible.builtin.debconf:
+    name: slapd
+    question: slapd/password2
+    value: "Skills39!"
+    vtype: password
+
+- name: Set slapd domain
+  ansible.builtin.debconf:
+    name: slapd
+    question: slapd/domain
+    value: "itnsa.id"
+    vtype: string
+
+- name: Set slapd purge
+  ansible.builtin.debconf:
+    name: slapd
+    question: slapd/purge_database
+    value: "true"
+    vtype: boolean
 
 - name: Reconfigure slapd
   ansible.builtin.command:

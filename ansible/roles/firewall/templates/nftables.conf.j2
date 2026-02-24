@@ -1,13 +1,13 @@
 #!/usr/sbin/nft -f
 # LKS 2025 – nftables ruleset untuk fw.itnsa.id
-# Interface names: WAN, INT, DMZ, MGMT (renamed via udev)
+# Interface: eth0=WAN, eth1=INT, eth2=DMZ, eth3=MGMT
 
 flush ruleset
 
-define WAN  = WAN
-define INT  = INT
-define DMZ  = DMZ
-define MGMT = MGMT
+define WAN  = eth0
+define INT  = eth1
+define DMZ  = eth2
+define MGMT = eth3
 
 define NET_INT  = 10.10.10.0/24
 define NET_DMZ  = 10.10.20.0/24
@@ -21,46 +21,42 @@ table inet filter {
     chain input {
         type filter hook input priority 0; policy drop;
 
-        # Allow loopback
         iif lo accept
-
-        # Allow established/related
         ct state established,related accept
 
-        # Allow semua dari MGMT
+        # Allow MGMT
         iif $MGMT accept
 
         # Allow ICMP
         ip protocol icmp accept
 
-        # Allow SSH (jangan diubah – dilarang soal)
+        # Allow SSH everywhere
         tcp dport 22 accept
 
-        # Allow WireGuard VPN
+        # Allow WireGuard
         iif $WAN udp dport {{ wg_port }} accept
     }
 
     chain forward {
         type filter hook forward priority 0; policy drop;
 
-        # Allow established/related
         ct state established,related accept
 
-        # INT dan DMZ bisa akses internet
+        # INT & DMZ ke internet
         iif $INT oif $WAN accept
         iif $DMZ oif $WAN accept
 
-        # VPN client (wg0) bisa akses INT dan DMZ
+        # VPN client ke INT & DMZ
         iif wg0 oif $INT accept
         iif wg0 oif $DMZ accept
 
-        # Mail server boleh query LDAP
+        # Mail → LDAP
         iif $DMZ oif $INT ip saddr $IP_MAIL ip daddr $IP_LDAP tcp dport 389 accept
 
-        # Port forward: internet → VRRP (HAProxy)
+        # Port forward HTTP/S → VRRP
         iif $WAN oif $DMZ ip daddr $IP_VRRP tcp dport { 80, 443 } accept
 
-        # Port forward: internet → DNS
+        # Port forward DNS
         iif $WAN oif $INT ip daddr $IP_DNS tcp dport 53 accept
         iif $WAN oif $INT ip daddr $IP_DNS udp dport 53 accept
     }
@@ -75,10 +71,7 @@ table ip nat {
     chain prerouting {
         type nat hook prerouting priority -100;
 
-        # DNAT port 80/443 → VRRP
         iif $WAN tcp dport { 80, 443 } dnat to $IP_VRRP
-
-        # DNAT port 53 → DNS
         iif $WAN tcp dport 53 dnat to $IP_DNS
         iif $WAN udp dport 53 dnat to $IP_DNS
     }
@@ -86,7 +79,6 @@ table ip nat {
     chain postrouting {
         type nat hook postrouting priority 100;
 
-        # Masquerade NAT ke internet
         oif $WAN masquerade
     }
 }

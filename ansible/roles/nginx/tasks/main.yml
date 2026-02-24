@@ -34,9 +34,3 @@
     name: nginx
     state: started
     enabled: true
-
-handlers:
-  - name: reload nginx
-    ansible.builtin.service:
-      name: nginx
-      state: reloaded

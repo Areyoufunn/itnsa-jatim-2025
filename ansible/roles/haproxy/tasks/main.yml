@@ -34,14 +34,3 @@
     state: started
     enabled: true
   loop: [haproxy, keepalived]
-
-handlers:
-  - name: restart haproxy
-    ansible.builtin.service:
-      name: haproxy
-      state: restarted
-
-  - name: restart keepalived
-    ansible.builtin.service:
-      name: keepalived
-      state: restarted
