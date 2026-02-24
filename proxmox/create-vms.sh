@@ -17,7 +17,6 @@ TEMPLATE=100
 STORAGE="local-lvm"
 PASS="Skills39!"
 GW_WAN="100.100.100.1"
-GW_MGMT="192.168.2.1"
 
 # === HELPER FUNCTION ===
 clone_vm() {
@@ -40,7 +39,7 @@ qm set 500 \
   --net0  virtio,bridge=$BR_WAN  \
   --net1  virtio,bridge=$BR_MGMT \
   --ipconfig0 ip=dhcp \
-  --ipconfig1 ip=192.168.2.100/24,gw=$GW_MGMT
+  --ipconfig1 ip=192.168.2.100/24
 qm start 500
 
 # ============================================================
@@ -56,7 +55,7 @@ qm set 501 \
   --ipconfig0 ip=100.100.100.254/24,gw=$GW_WAN \
   --ipconfig1 ip=10.10.10.254/24  \
   --ipconfig2 ip=10.10.20.254/24  \
-  --ipconfig3 ip=192.168.2.15/24,gw=$GW_MGMT
+  --ipconfig3 ip=192.168.2.15/24
 qm start 501
 
 # ============================================================
@@ -68,7 +67,7 @@ qm set 502 \
   --net0  virtio,bridge=$BR_INT  \
   --net1  virtio,bridge=$BR_MGMT \
   --ipconfig0 ip=10.10.10.10/24,gw=10.10.10.254 \
-  --ipconfig1 ip=192.168.2.11/24,gw=$GW_MGMT
+  --ipconfig1 ip=192.168.2.11/24
 qm start 502
 
 # ============================================================
@@ -80,7 +79,7 @@ qm set 503 \
   --net0  virtio,bridge=$BR_DMZ  \
   --net1  virtio,bridge=$BR_MGMT \
   --ipconfig0 ip=10.10.20.10/24,gw=10.10.20.254 \
-  --ipconfig1 ip=192.168.2.12/24,gw=$GW_MGMT
+  --ipconfig1 ip=192.168.2.12/24
 qm start 503
 
 # ============================================================
@@ -92,7 +91,7 @@ qm set 504 \
   --net0  virtio,bridge=$BR_DMZ  \
   --net1  virtio,bridge=$BR_MGMT \
   --ipconfig0 ip=10.10.20.21/24,gw=10.10.20.254 \
-  --ipconfig1 ip=192.168.2.13/24,gw=$GW_MGMT
+  --ipconfig1 ip=192.168.2.13/24
 qm start 504
 
 # ============================================================
@@ -104,7 +103,7 @@ qm set 505 \
   --net0  virtio,bridge=$BR_DMZ  \
   --net1  virtio,bridge=$BR_MGMT \
   --ipconfig0 ip=10.10.20.22/24,gw=10.10.20.254 \
-  --ipconfig1 ip=192.168.2.14/24,gw=$GW_MGMT
+  --ipconfig1 ip=192.168.2.14/24
 qm start 505
 
 # ============================================================
@@ -116,7 +115,7 @@ qm set 506 \
   --net0  virtio,bridge=$BR_WAN  \
   --net1  virtio,bridge=$BR_MGMT \
   --ipconfig0 ip=100.100.100.100/24,gw=$GW_WAN \
-  --ipconfig1 ip=192.168.2.16/24,gw=$GW_MGMT
+  --ipconfig1 ip=192.168.2.16/24
 qm start 506
 
 echo ""
