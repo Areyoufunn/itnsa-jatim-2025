@@ -3,14 +3,15 @@
 # LKS 2025 – Proxmox VM Creator
 # Template ID  : 100 (Debian 13 Trixie + cloud-init)
 # VM IDs       : 500–506
+# Bridges      : vmbr0(WAN), INT, DMZ, MGMT
 # Run as root on Proxmox host
 # ============================================================
 
 # === BRIDGE CONFIG ===
-BR_WAN="vmbr0"       # WAN  – 100.100.100.0/24
-BR_INT="vmbr-int"    # INT  – 10.10.10.0/24
-BR_DMZ="vmbr-dmz"    # DMZ  – 10.10.20.0/24
-BR_MGMT="vmbr-mgmt"  # MGMT – 192.168.2.0/24
+BR_WAN="vmbr0"  # WAN  – 100.100.100.0/24
+BR_INT="INT"    # INT  – 10.10.10.0/24
+BR_DMZ="DMZ"    # DMZ  – 10.10.20.0/24
+BR_MGMT="MGMT"  # MGMT – 192.168.2.0/24
 
 TEMPLATE=100
 STORAGE="local-lvm"
@@ -59,7 +60,6 @@ qm start 501
 # ============================================================
 # VM 502 – int-srv.itnsa.id
 # Interfaces: INT (net0), MGMT (net1)
-# Services  : DNS, LDAP, CA, Ansible
 # ============================================================
 clone_vm 502 "int-srv" 2048
 qm set 502 \
@@ -72,7 +72,6 @@ qm start 502
 # ============================================================
 # VM 503 – mail.itnsa.id
 # Interfaces: DMZ (net0), MGMT (net1)
-# Services  : Postfix, Dovecot
 # ============================================================
 clone_vm 503 "mail" 1024
 qm set 503 \
@@ -85,7 +84,6 @@ qm start 503
 # ============================================================
 # VM 504 – web-01.itnsa.id
 # Interfaces: DMZ (net0), MGMT (net1)
-# Services  : HAProxy (Master), Keepalived, Nginx
 # ============================================================
 clone_vm 504 "web-01" 1024
 qm set 504 \
@@ -98,7 +96,6 @@ qm start 504
 # ============================================================
 # VM 505 – web-02.itnsa.id
 # Interfaces: DMZ (net0), MGMT (net1)
-# Services  : HAProxy (Backup), Keepalived, Nginx
 # ============================================================
 clone_vm 505 "web-02" 1024
 qm set 505 \
@@ -111,7 +108,6 @@ qm start 505
 # ============================================================
 # VM 506 – budi-clt.itnsa.id
 # Interfaces: WAN (net0), MGMT (net1)
-# Services  : WireGuard Client, Thunderbird
 # ============================================================
 clone_vm 506 "budi-clt" 1024
 qm set 506 \
@@ -124,19 +120,11 @@ qm start 506
 echo ""
 echo "============================================================"
 echo " Semua VM berhasil dibuat!"
-echo ""
-echo " VM 500 – juri      : MGMT 192.168.2.100 (Ansible controller)"
+echo " VM 500 – juri      : MGMT 192.168.2.100"
 echo " VM 501 – fw        : MGMT 192.168.2.15"
 echo " VM 502 – int-srv   : MGMT 192.168.2.11"
 echo " VM 503 – mail      : MGMT 192.168.2.12"
 echo " VM 504 – web-01    : MGMT 192.168.2.13"
 echo " VM 505 – web-02    : MGMT 192.168.2.14"
 echo " VM 506 – budi-clt  : MGMT 192.168.2.16"
-echo "============================================================"
-echo ""
-echo " Langkah berikutnya:"
-echo " 1. SSH ke juri (192.168.2.100)"
-echo " 2. apt install -y ansible sshpass"
-echo " 3. scp ansible/ ke /etc/ansible/"
-echo " 4. ansible-playbook /etc/ansible/site.yml"
 echo "============================================================"

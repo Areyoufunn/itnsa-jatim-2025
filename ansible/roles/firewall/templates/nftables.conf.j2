@@ -1,20 +1,20 @@
 #!/usr/sbin/nft -f
 # LKS 2025 – nftables ruleset untuk fw.itnsa.id
-# Interfaces: eth0=WAN, eth1=INT, eth2=DMZ, eth3=MGMT
+# Interface names: WAN, INT, DMZ, MGMT (renamed via udev)
 
 flush ruleset
 
-define WAN  = eth0
-define INT  = eth1
-define DMZ  = eth2
-define MGMT = eth3
+define WAN  = WAN
+define INT  = INT
+define DMZ  = DMZ
+define MGMT = MGMT
 
 define NET_INT  = 10.10.10.0/24
 define NET_DMZ  = 10.10.20.0/24
 define IP_DNS   = 10.10.10.10
 define IP_VRRP  = 10.10.20.100
-define IP_LDAP  = 10.10.10.10
 define IP_MAIL  = 10.10.20.10
+define IP_LDAP  = 10.10.10.10
 
 table inet filter {
 
@@ -33,7 +33,7 @@ table inet filter {
         # Allow ICMP
         ip protocol icmp accept
 
-        # Allow SSH dari mana saja (JANGAN diubah – soal melarang block SSH)
+        # Allow SSH (jangan diubah – dilarang soal)
         tcp dport 22 accept
 
         # Allow WireGuard VPN
@@ -46,7 +46,7 @@ table inet filter {
         # Allow established/related
         ct state established,related accept
 
-        # INT dan DMZ bisa akses internet (WAN)
+        # INT dan DMZ bisa akses internet
         iif $INT oif $WAN accept
         iif $DMZ oif $WAN accept
 
@@ -54,7 +54,7 @@ table inet filter {
         iif wg0 oif $INT accept
         iif wg0 oif $DMZ accept
 
-        # Mail server boleh query LDAP di int-srv
+        # Mail server boleh query LDAP
         iif $DMZ oif $INT ip saddr $IP_MAIL ip daddr $IP_LDAP tcp dport 389 accept
 
         # Port forward: internet → VRRP (HAProxy)
@@ -75,10 +75,10 @@ table ip nat {
     chain prerouting {
         type nat hook prerouting priority -100;
 
-        # Port forward port 80/443 → VRRP
+        # DNAT port 80/443 → VRRP
         iif $WAN tcp dport { 80, 443 } dnat to $IP_VRRP
 
-        # Port forward port 53 → DNS
+        # DNAT port 53 → DNS
         iif $WAN tcp dport 53 dnat to $IP_DNS
         iif $WAN udp dport 53 dnat to $IP_DNS
     }
@@ -86,7 +86,7 @@ table ip nat {
     chain postrouting {
         type nat hook postrouting priority 100;
 
-        # Masquerade NAT untuk INT dan DMZ ke WAN
+        # Masquerade NAT ke internet
         oif $WAN masquerade
     }
 }

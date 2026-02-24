@@ -5,17 +5,38 @@
     state: present
     update_cache: true
 
-- name: Deploy nftables config
-  ansible.builtin.template:
-    src: nftables.conf.j2
-    dest: /etc/nftables.conf
-  notify: reload nftables
+- name: Rename network interfaces berdasarkan subnet
+  ansible.builtin.shell: |
+    RULES=/etc/udev/rules.d/70-iface-rename.rules
+    > $RULES
+    declare -A MAP=(
+      ["100.100.100"]="WAN"
+      ["10.10.10"]="INT"
+      ["10.10.20"]="DMZ"
+      ["192.168.2"]="MGMT"
+    )
+    for prefix in "${!MAP[@]}"; do
+      iface=$(ip -4 addr | grep -B2 "${prefix}\." | grep -oP '^\d+: \K[^:]+')
+      [ -z "$iface" ] && continue
+      mac=$(cat /sys/class/net/$iface/address 2>/dev/null)
+      name="${MAP[$prefix]}"
+      echo "SUBSYSTEM==\"net\", ACTION==\"add\", ATTR{address}==\"$mac\", NAME=\"$name\"" >> $RULES
+    done
+    udevadm control --reload-rules
+  args:
+    creates: /etc/udev/rules.d/70-iface-rename.rules
 
 - name: Enable IP forwarding
   ansible.posix.sysctl:
     name: net.ipv4.ip_forward
     value: '1'
     permanent: true
+
+- name: Deploy nftables config
+  ansible.builtin.template:
+    src: nftables.conf.j2
+    dest: /etc/nftables.conf
+  notify: reload nftables
 
 - name: Start nftables
   ansible.builtin.service:

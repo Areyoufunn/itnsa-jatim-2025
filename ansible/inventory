@@ -1,5 +1,6 @@
 # LKS 2025 – Ansible Inventory
 # Semua host diakses via MGMT interface (192.168.2.0/24)
+# Koneksi pakai SSH key (setup dulu: bash proxmox/setup-ssh-keys.sh)
 
 [int]
 int-srv  ansible_host=192.168.2.11
@@ -19,4 +20,3 @@ budi-clt ansible_host=192.168.2.16
 
 [all:vars]
 ansible_user=root
-ansible_ssh_pass=Skills39!
