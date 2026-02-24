@@ -1,0 +1,50 @@
+---
+- name: Install wireguard
+  ansible.builtin.apt:
+    name: [wireguard, wireguard-tools, sudo]
+    state: present
+    update_cache: true
+
+- name: Buat user budi (Budi Sudarsono)
+  ansible.builtin.user:
+    name: budi
+    comment: "Budi Sudarsono"
+    password: "{{ 'Skills39!' | password_hash('sha512') }}"
+    state: present
+    shell: /bin/bash
+
+- name: Budi jadi sudoer tanpa password
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/budi
+    content: "budi ALL=(ALL) NOPASSWD:ALL\n"
+    mode: '0440'
+
+- name: Generate client private key
+  ansible.builtin.shell:
+    cmd: wg genkey | tee /etc/wireguard/client.key | wg pubkey > /etc/wireguard/client.pub
+    creates: /etc/wireguard/client.key
+
+- name: Set permissions
+  ansible.builtin.file:
+    path: /etc/wireguard/client.key
+    mode: '0600'
+
+- name: Baca client private key
+  ansible.builtin.slurp:
+    src: /etc/wireguard/client.key
+  register: wg_client_key
+
+- name: Deploy wg0.conf client
+  ansible.builtin.template:
+    src: wg0-client.conf.j2
+    dest: /etc/wireguard/wg0.conf
+    mode: '0600'
+  vars:
+    privkey: "{{ wg_client_key.content | b64decode | trim }}"
+
+- name: Enable dan start wg-quick@wg0
+  ansible.builtin.systemd:
+    name: wg-quick@wg0
+    state: started
+    enabled: true
+    daemon_reload: true

@@ -1,0 +1,14 @@
+zone "itnsa.id" {
+    type master;
+    file "/etc/bind/db.itnsa.id";
+};
+
+zone "10.10.10.in-addr.arpa" {
+    type master;
+    file "/etc/bind/db.10.10.10";
+};
+
+zone "20.10.10.in-addr.arpa" {
+    type master;
+    file "/etc/bind/db.10.10.20";
+};

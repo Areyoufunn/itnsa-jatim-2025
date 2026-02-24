@@ -1,0 +1,46 @@
+---
+# LKS 2025 – Playbook 02: Nginx Virtual Host Port 8081
+# Usage: ansible-playbook /etc/ansible/02-web-int.yml
+
+- name: Install Nginx + vhost port 8081 on web-02
+  hosts: web-02
+  tasks:
+    - name: Install nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: true
+
+    - name: Create vhost port 8081
+      ansible.builtin.copy:
+        dest: /etc/nginx/sites-available/web-int
+        content: |
+          server {
+              listen 8081;
+              server_name _;
+              root /var/www/web-int;
+              index index.html;
+          }
+
+    - name: Create web root
+      ansible.builtin.file:
+        path: /var/www/web-int
+        state: directory
+        mode: '0755'
+
+    - name: Create index.html
+      ansible.builtin.copy:
+        dest: /var/www/web-int/index.html
+        content: "This is web internal\n"
+
+    - name: Enable vhost
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/web-int
+        dest: /etc/nginx/sites-enabled/web-int
+        state: link
+
+    - name: Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+        enabled: true

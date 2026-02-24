@@ -1,0 +1,34 @@
+# OU Employees
+dn: ou=Employees,dc=itnsa,dc=id
+objectClass: organizationalUnit
+ou: Employees
+
+# User: boaz
+dn: uid=boaz,ou=Employees,dc=itnsa,dc=id
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: boaz
+cn: Boaz Salossa
+sn: Salossa
+mail: boaz.salossa@itnsa.id
+userPassword: Skills39!
+uidNumber: 1001
+gidNumber: 1001
+homeDirectory: /home/boaz
+loginShell: /bin/bash
+
+# User: budi
+dn: uid=budi,ou=Employees,dc=itnsa,dc=id
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: budi
+cn: Budi Sudarsono
+sn: Sudarsono
+mail: budi.sudarsono@itnsa.id
+userPassword: Skills39!
+uidNumber: 1002
+gidNumber: 1002
+homeDirectory: /home/budi
+loginShell: /bin/bash

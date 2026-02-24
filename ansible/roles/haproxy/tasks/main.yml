@@ -1,0 +1,47 @@
+---
+- name: Install haproxy dan keepalived
+  ansible.builtin.apt:
+    name: [haproxy, keepalived]
+    state: present
+    update_cache: true
+
+- name: Konfigurasi HAProxy
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+  notify: restart haproxy
+
+- name: Konfigurasi Keepalived
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+  notify: restart keepalived
+
+- name: Buat directory cert haproxy
+  ansible.builtin.file:
+    path: /etc/haproxy/certs
+    state: directory
+    mode: '0750'
+
+- name: Gabungkan web cert + key untuk HAProxy
+  ansible.builtin.shell:
+    cmd: cat {{ ca_dir }}/web.pem {{ ca_dir }}/web.key > /etc/haproxy/certs/web.pem
+    creates: /etc/haproxy/certs/web.pem
+
+- name: Start haproxy dan keepalived
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop: [haproxy, keepalived]
+
+handlers:
+  - name: restart haproxy
+    ansible.builtin.service:
+      name: haproxy
+      state: restarted
+
+  - name: restart keepalived
+    ansible.builtin.service:
+      name: keepalived
+      state: restarted

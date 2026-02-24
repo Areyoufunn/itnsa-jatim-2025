@@ -1,0 +1,15 @@
+# Dovecot LDAP config (Debian 13 / Dovecot 2.4+)
+hosts = {{ ip_int_srv }}
+dn = cn=admin,dc=itnsa,dc=id
+dnpass = Skills39!
+tls = no
+auth_bind = yes
+base = ou=Employees,dc=itnsa,dc=id
+user_filter = (&(objectClass=inetOrgPerson)(uid=%u))
+pass_filter = (&(objectClass=inetOrgPerson)(uid=%u))
+
+user_attrs = \
+  =uid=5000, \
+  =gid=5000, \
+  =home=/var/mail/vhosts/%Ld/%Ln, \
+  =mail=maildir:/var/mail/vhosts/%Ld/%Ln/Maildir

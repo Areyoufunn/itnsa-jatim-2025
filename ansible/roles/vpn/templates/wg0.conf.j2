@@ -1,0 +1,15 @@
+[Interface]
+PrivateKey = {{ privkey }}
+Address    = {{ wg_server_ip }}/24
+ListenPort = {{ wg_port }}
+
+# Aktifkan routing untuk client VPN
+PostUp   = nft add rule ip nat postrouting oif eth0 masquerade
+PostDown = nft delete rule ip nat postrouting oif eth0 masquerade
+
+# === Client: budi-clt ===
+[Peer]
+# PublicKey diisi manual setelah generate key di budi-clt
+PublicKey  = REPLACE_WITH_CLIENT_PUBKEY
+PresharedKey = REPLACE_WITH_PSK
+AllowedIPs = {{ wg_client_ip }}/32

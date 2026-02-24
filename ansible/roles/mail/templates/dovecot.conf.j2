@@ -1,0 +1,26 @@
+# Dovecot – dovecot.conf (Debian 13 / Dovecot 2.4+)
+protocols = imap
+
+# TLS
+ssl = required
+ssl_cert = <{{ ca_dir }}/mail.pem
+ssl_key  = <{{ ca_dir }}/mail.key
+
+# Auth via LDAP
+auth_mechanisms = plain login
+passdb {
+  driver = ldap
+  args   = /etc/dovecot/dovecot-ldap.conf
+}
+userdb {
+  driver = ldap
+  args   = /etc/dovecot/dovecot-ldap.conf
+}
+
+# Maildir
+mail_location = maildir:/var/mail/vhosts/%d/%n/Maildir
+
+# Namespace
+namespace inbox {
+  inbox = yes
+}

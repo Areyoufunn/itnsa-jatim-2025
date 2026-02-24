@@ -1,0 +1,40 @@
+---
+# LKS 2025 – Master Playbook
+# Usage: ansible-playbook /etc/ansible/site.yml
+
+- name: INT Server (DNS + LDAP + CA)
+  hosts: int
+  roles:
+    - dns
+    - ldap
+    - ca
+
+- name: Mail Server
+  hosts: dmz_mail
+  roles:
+    - mail
+
+- name: Web Servers (Nginx)
+  hosts: dmz_web
+  roles:
+    - nginx
+
+- name: HA Proxy + Keepalived
+  hosts: dmz_web
+  roles:
+    - haproxy
+
+- name: Firewall (nftables)
+  hosts: fw
+  roles:
+    - firewall
+
+- name: WireGuard VPN Server
+  hosts: fw
+  roles:
+    - vpn
+
+- name: Client Setup
+  hosts: client
+  roles:
+    - client

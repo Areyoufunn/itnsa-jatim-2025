@@ -1,0 +1,84 @@
+---
+- name: Install openssl
+  ansible.builtin.apt:
+    name: openssl
+    state: present
+    update_cache: true
+
+- name: Create CA directory
+  ansible.builtin.file:
+    path: "{{ ca_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Generate CA private key
+  ansible.builtin.command:
+    cmd: openssl genrsa -out {{ ca_dir }}/ca.key 4096
+    creates: "{{ ca_dir }}/ca.key"
+
+- name: Generate Root CA certificate
+  ansible.builtin.command:
+    cmd: >
+      openssl req -new -x509 -key {{ ca_dir }}/ca.key
+      -out {{ ca_dir }}/ca.pem -days 3650
+      -subj "/C=ID/ST=Jakarta/O=ITNSA/CN=ITNSA Root CA"
+      -addext "keyUsage=critical,keyCertSign"
+      -addext "basicConstraints=critical,CA:TRUE"
+    creates: "{{ ca_dir }}/ca.pem"
+
+# === Web Certificate (SAN: www.itnsa.id, www.int.itnsa.id) ===
+- name: Generate web private key
+  ansible.builtin.command:
+    cmd: openssl genrsa -out {{ ca_dir }}/web.key 2048
+    creates: "{{ ca_dir }}/web.key"
+
+- name: Generate web CSR with SAN
+  ansible.builtin.command:
+    cmd: >
+      openssl req -new -key {{ ca_dir }}/web.key
+      -out {{ ca_dir }}/web.csr
+      -subj "/C=ID/O=ITNSA/CN=www.itnsa.id"
+      -addext "subjectAltName=DNS:www.itnsa.id,DNS:www.int.itnsa.id"
+    creates: "{{ ca_dir }}/web.csr"
+
+- name: Sign web certificate
+  ansible.builtin.command:
+    cmd: >
+      openssl x509 -req -in {{ ca_dir }}/web.csr
+      -CA {{ ca_dir }}/ca.pem -CAkey {{ ca_dir }}/ca.key
+      -CAcreateserial -out {{ ca_dir }}/web.pem -days 365
+      -extensions v3_req -extfile <(printf "[v3_req]\nsubjectAltName=DNS:www.itnsa.id,DNS:www.int.itnsa.id")
+    creates: "{{ ca_dir }}/web.pem"
+
+# === Mail Certificate ===
+- name: Generate mail private key
+  ansible.builtin.command:
+    cmd: openssl genrsa -out {{ ca_dir }}/mail.key 2048
+    creates: "{{ ca_dir }}/mail.key"
+
+- name: Generate mail CSR
+  ansible.builtin.command:
+    cmd: >
+      openssl req -new -key {{ ca_dir }}/mail.key
+      -out {{ ca_dir }}/mail.csr
+      -subj "/C=ID/O=ITNSA/CN=mail.itnsa.id"
+    creates: "{{ ca_dir }}/mail.csr"
+
+- name: Sign mail certificate
+  ansible.builtin.command:
+    cmd: >
+      openssl x509 -req -in {{ ca_dir }}/mail.csr
+      -CA {{ ca_dir }}/ca.pem -CAkey {{ ca_dir }}/ca.key
+      -CAcreateserial -out {{ ca_dir }}/mail.pem -days 365
+    creates: "{{ ca_dir }}/mail.pem"
+
+# === Install CA ke semua server (dijalankan via delegate) ===
+- name: Copy CA cert to trust store
+  ansible.builtin.copy:
+    src: "{{ ca_dir }}/ca.pem"
+    dest: /usr/local/share/ca-certificates/itnsa-root-ca.crt
+    remote_src: true
+
+- name: Update CA certificates
+  ansible.builtin.command:
+    cmd: update-ca-certificates

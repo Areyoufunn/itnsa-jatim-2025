@@ -1,0 +1,29 @@
+---
+- name: Install slapd dan ldap-utils
+  ansible.builtin.apt:
+    name: [slapd, ldap-utils]
+    state: present
+    update_cache: true
+
+- name: Set slapd password
+  ansible.builtin.debconf:
+    name: slapd
+    question: slapd/password1
+    value: "Skills39!"
+    vtype: password
+
+- name: Reconfigure slapd
+  ansible.builtin.command:
+    cmd: dpkg-reconfigure -f noninteractive slapd
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Copy users LDIF
+  ansible.builtin.copy:
+    src: users.ldif
+    dest: /tmp/users.ldif
+
+- name: Add LDAP users
+  ansible.builtin.command:
+    cmd: ldapadd -x -D "cn=admin,dc=itnsa,dc=id" -w "Skills39!" -f /tmp/users.ldif
+  ignore_errors: true

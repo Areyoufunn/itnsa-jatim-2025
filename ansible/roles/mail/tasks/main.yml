@@ -1,0 +1,49 @@
+---
+- name: Install postfix dan dovecot
+  ansible.builtin.apt:
+    name: [postfix, dovecot-imapd, dovecot-ldap, mailutils]
+    state: present
+    update_cache: true
+
+- name: Configurasi postfix main.cf
+  ansible.builtin.template:
+    src: main.cf.j2
+    dest: /etc/postfix/main.cf
+  notify: restart postfix
+
+- name: Konfigurasi dovecot
+  ansible.builtin.template:
+    src: dovecot.conf.j2
+    dest: /etc/dovecot/dovecot.conf
+  notify: restart dovecot
+
+- name: Konfigurasi dovecot-ldap
+  ansible.builtin.template:
+    src: dovecot-ldap.conf.j2
+    dest: /etc/dovecot/dovecot-ldap.conf
+  notify: restart dovecot
+
+- name: Buat Maildir untuk budi dan boaz
+  ansible.builtin.file:
+    path: "/var/mail/vhosts/itnsa.id/{{ item }}/Maildir"
+    state: directory
+    mode: '0755'
+  loop: [budi, boaz]
+
+- name: Start postfix dan dovecot
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop: [postfix, dovecot]
+
+handlers:
+  - name: restart postfix
+    ansible.builtin.service:
+      name: postfix
+      state: restarted
+
+  - name: restart dovecot
+    ansible.builtin.service:
+      name: dovecot
+      state: restarted

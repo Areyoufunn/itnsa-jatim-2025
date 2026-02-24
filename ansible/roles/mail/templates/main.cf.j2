@@ -1,0 +1,20 @@
+# Postfix – main.cf
+myhostname = mail.itnsa.id
+mydomain = itnsa.id
+myorigin = $mydomain
+mydestination =
+mynetworks = 127.0.0.0/8 10.10.10.0/24 10.10.20.0/24
+
+# Virtual Mailbox
+virtual_mailbox_domains = itnsa.id
+virtual_mailbox_base = /var/mail/vhosts
+virtual_mailbox_maps = hash:/etc/postfix/vmailbox
+virtual_minimum_uid = 100
+virtual_uid_maps = static:5000
+virtual_gid_maps = static:5000
+
+# TLS
+smtpd_tls_cert_file = {{ ca_dir }}/mail.pem
+smtpd_tls_key_file  = {{ ca_dir }}/mail.key
+smtpd_tls_security_level = may
+smtp_tls_security_level  = may

@@ -1,0 +1,44 @@
+---
+- name: Install wireguard
+  ansible.builtin.apt:
+    name: [wireguard, wireguard-tools]
+    state: present
+    update_cache: true
+
+- name: Generate server private key
+  ansible.builtin.shell:
+    cmd: wg genkey | tee /etc/wireguard/server.key | wg pubkey > /etc/wireguard/server.pub
+    creates: /etc/wireguard/server.key
+
+- name: Generate pre-shared key
+  ansible.builtin.shell:
+    cmd: wg genpsk > /etc/wireguard/psk.key
+    creates: /etc/wireguard/psk.key
+
+- name: Set permissions key
+  ansible.builtin.file:
+    path: "{{ item }}"
+    mode: '0600'
+  loop:
+    - /etc/wireguard/server.key
+    - /etc/wireguard/psk.key
+
+- name: Baca server private key
+  ansible.builtin.slurp:
+    src: /etc/wireguard/server.key
+  register: wg_server_key
+
+- name: Deploy wg0.conf server
+  ansible.builtin.template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
+    mode: '0600'
+  vars:
+    privkey: "{{ wg_server_key.content | b64decode | trim }}"
+
+- name: Enable dan start wg-quick@wg0
+  ansible.builtin.systemd:
+    name: wg-quick@wg0
+    state: started
+    enabled: true
+    daemon_reload: true

@@ -1,0 +1,42 @@
+---
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: true
+
+- name: Deploy vhost port 8080
+  ansible.builtin.template:
+    src: vhost.conf.j2
+    dest: /etc/nginx/sites-available/web
+  notify: reload nginx
+
+- name: Enable vhost
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/web
+    dest: /etc/nginx/sites-enabled/web
+    state: link
+  notify: reload nginx
+
+- name: Disable default vhost
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload nginx
+
+- name: Create index.html
+  ansible.builtin.copy:
+    dest: /var/www/html/index.html
+    content: "Hello from {{ ansible_hostname }}\n"
+
+- name: Start nginx
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true
+
+handlers:
+  - name: reload nginx
+    ansible.builtin.service:
+      name: nginx
+      state: reloaded

@@ -1,0 +1,28 @@
+$TTL 86400
+@   IN  SOA  int-srv.itnsa.id. admin.itnsa.id. (
+            2025010101 ; Serial
+            3600       ; Refresh
+            1800       ; Retry
+            604800     ; Expire
+            86400 )    ; Minimum
+
+; NS Record
+@          IN  NS   int-srv.itnsa.id.
+
+; A Records – semua server
+fw         IN  A    10.10.10.254
+int-srv    IN  A    10.10.10.10
+mail       IN  A    10.10.20.10
+web-01     IN  A    10.10.20.21
+web-02     IN  A    10.10.20.22
+budi-clt   IN  A    100.100.100.100
+
+; A Records – tambahan
+www        IN  A    100.100.100.254
+vrrp       IN  A    10.10.20.100
+
+; CNAME
+www.int    IN  CNAME vrrp.itnsa.id.
+
+; MX Record
+@          IN  MX   10 mail.itnsa.id.

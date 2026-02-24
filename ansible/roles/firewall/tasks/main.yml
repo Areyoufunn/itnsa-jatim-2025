@@ -1,0 +1,30 @@
+---
+- name: Install nftables
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+    update_cache: true
+
+- name: Deploy nftables config
+  ansible.builtin.template:
+    src: nftables.conf.j2
+    dest: /etc/nftables.conf
+  notify: reload nftables
+
+- name: Enable IP forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    permanent: true
+
+- name: Start nftables
+  ansible.builtin.service:
+    name: nftables
+    state: started
+    enabled: true
+
+handlers:
+  - name: reload nftables
+    ansible.builtin.service:
+      name: nftables
+      state: reloaded

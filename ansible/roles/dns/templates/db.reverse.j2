@@ -1,0 +1,21 @@
+$TTL 86400
+@   IN  SOA  int-srv.itnsa.id. admin.itnsa.id. (
+            2025010101 ; Serial
+            3600       ; Refresh
+            1800       ; Retry
+            604800     ; Expire
+            86400 )    ; Minimum
+
+@   IN  NS   int-srv.itnsa.id.
+
+{% if reverse_net == "10.10.10" %}
+10  IN  PTR  int-srv.itnsa.id.
+254 IN  PTR  fw.itnsa.id.
+{% endif %}
+{% if reverse_net == "10.10.20" %}
+10  IN  PTR  mail.itnsa.id.
+21  IN  PTR  web-01.itnsa.id.
+22  IN  PTR  web-02.itnsa.id.
+100 IN  PTR  vrrp.itnsa.id.
+254 IN  PTR  fw.itnsa.id.
+{% endif %}

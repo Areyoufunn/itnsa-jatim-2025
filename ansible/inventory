@@ -1,0 +1,22 @@
+# LKS 2025 – Ansible Inventory
+# Semua host diakses via MGMT interface (192.168.2.0/24)
+
+[int]
+int-srv  ansible_host=192.168.2.11
+
+[dmz_mail]
+mail     ansible_host=192.168.2.12
+
+[dmz_web]
+web-01   ansible_host=192.168.2.13
+web-02   ansible_host=192.168.2.14
+
+[fw]
+fw       ansible_host=192.168.2.15
+
+[client]
+budi-clt ansible_host=192.168.2.16
+
+[all:vars]
+ansible_user=root
+ansible_ssh_pass=Skills39!

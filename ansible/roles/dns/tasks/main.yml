@@ -1,0 +1,50 @@
+---
+- name: Install bind9
+  ansible.builtin.apt:
+    name: [bind9, bind9utils]
+    state: present
+    update_cache: true
+
+- name: Configure named.conf.options
+  ansible.builtin.copy:
+    dest: /etc/bind/named.conf.options
+    content: |
+      options {
+          directory "/var/cache/bind";
+          forwarders { 8.8.8.8; };
+          dnssec-validation no;
+          listen-on { any; };
+          allow-query { any; };
+      };
+
+- name: Configure named.conf.local
+  ansible.builtin.template:
+    src: named.conf.local.j2
+    dest: /etc/bind/named.conf.local
+
+- name: Create forward zone file
+  ansible.builtin.template:
+    src: db.itnsa.id.j2
+    dest: /etc/bind/db.itnsa.id
+
+- name: Create reverse zone INT (10.10.10)
+  ansible.builtin.template:
+    src: db.reverse.j2
+    dest: /etc/bind/db.10.10.10
+  vars:
+    reverse_net: "10.10.10"
+    reverse_zone: "10.10.10.in-addr.arpa"
+
+- name: Create reverse zone DMZ (10.10.20)
+  ansible.builtin.template:
+    src: db.reverse.j2
+    dest: /etc/bind/db.10.10.20
+  vars:
+    reverse_net: "10.10.20"
+    reverse_zone: "10.10.20.in-addr.arpa"
+
+- name: Enable and restart bind9
+  ansible.builtin.service:
+    name: named
+    state: restarted
+    enabled: true

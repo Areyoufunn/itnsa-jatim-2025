@@ -1,0 +1,14 @@
+---
+# LKS 2025 – Playbook 01: Buat User
+# Usage: ansible-playbook /etc/ansible/01-user.yml -e user_name=developer
+
+- name: Create user on web-02
+  hosts: web-02
+  tasks:
+    - name: Create user {{ user_name }}
+      ansible.builtin.user:
+        name: "{{ user_name }}"
+        password: "{{ 'Skills39!' | password_hash('sha512') }}"
+        state: present
+        create_home: true
+        shell: /bin/bash

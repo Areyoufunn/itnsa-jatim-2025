@@ -1,0 +1,16 @@
+vrrp_instance VI_1 {
+    state {{ 'MASTER' if inventory_hostname == 'web-01' else 'BACKUP' }}
+    interface eth0
+    virtual_router_id 51
+    priority {{ 101 if inventory_hostname == 'web-01' else 100 }}
+    advert_int 1
+
+    authentication {
+        auth_type PASS
+        auth_pass Skills39!
+    }
+
+    virtual_ipaddress {
+        {{ ip_vrrp }}/24
+    }
+}
