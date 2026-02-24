@@ -27,6 +27,8 @@ clone_vm() {
   qm set $id --memory $mem --cores 2 --onboot 1
   qm set $id --ciuser root --cipassword "$PASS"
   qm set $id --searchdomain itnsa.id --nameserver 8.8.8.8
+  # Tambah cloud-init drive agar ipconfig terapply
+  qm set $id --ide2 $STORAGE:cloudinit 2>/dev/null || true
 }
 
 # ============================================================
