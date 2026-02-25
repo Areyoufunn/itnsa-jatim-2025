@@ -11,25 +11,25 @@ ssl_server {
   key_file  = {{ ca_dir }}/mail.key
 }
 
-# Auth via LDAP – inline config (Dovecot 2.4 tidak support "args")
+# Auth via LDAP (Dovecot 2.4 setting names)
 auth_mechanisms = plain login
 
 passdb ldap {
-  hosts        = {{ ip_int_srv }}
-  dn           = cn=admin,dc=itnsa,dc=id
-  dnpass       = Skills39!
-  auth_bind    = yes
-  base         = ou=Employees,dc=itnsa,dc=id
-  pass_filter  = (&(objectClass=inetOrgPerson)(uid=%u))
+  ldap_uris             = ldap://{{ ip_int_srv }}
+  ldap_auth_dn          = cn=admin,dc=itnsa,dc=id
+  ldap_auth_dn_password = Skills39!
+  auth_bind             = yes
+  ldap_base             = ou=Employees,dc=itnsa,dc=id
+  pass_filter           = (&(objectClass=inetOrgPerson)(uid=%u))
 }
 
 userdb ldap {
-  hosts        = {{ ip_int_srv }}
-  dn           = cn=admin,dc=itnsa,dc=id
-  dnpass       = Skills39!
-  base         = ou=Employees,dc=itnsa,dc=id
-  user_filter  = (&(objectClass=inetOrgPerson)(uid=%u))
-  user_attrs   = \
+  ldap_uris             = ldap://{{ ip_int_srv }}
+  ldap_auth_dn          = cn=admin,dc=itnsa,dc=id
+  ldap_auth_dn_password = Skills39!
+  ldap_base             = ou=Employees,dc=itnsa,dc=id
+  user_filter           = (&(objectClass=inetOrgPerson)(uid=%u))
+  user_attrs            = \
     =uid=5000, \
     =gid=5000, \
     =home=/var/mail/vhosts/%Ld/%Ln, \
