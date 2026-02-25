@@ -1,4 +1,6 @@
-# Dovecot – dovecot.conf (Debian 13 / Dovecot 2.4+)
+dovecot_config_version = 2.4.1
+
+# Dovecot – dovecot.conf (Debian 13 / Dovecot 2.4.1)
 protocols = imap
 
 # TLS
@@ -8,13 +10,11 @@ ssl_key  = <{{ ca_dir }}/mail.key
 
 # Auth via LDAP
 auth_mechanisms = plain login
-passdb {
-  driver = ldap
-  args   = /etc/dovecot/dovecot-ldap.conf
+passdb ldap {
+  args = /etc/dovecot/dovecot-ldap.conf
 }
-userdb {
-  driver = ldap
-  args   = /etc/dovecot/dovecot-ldap.conf
+userdb ldap {
+  args = /etc/dovecot/dovecot-ldap.conf
 }
 
 # Maildir
