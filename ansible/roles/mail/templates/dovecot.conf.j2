@@ -4,22 +4,36 @@ dovecot_storage_version = 2.4.1
 # Dovecot – dovecot.conf (Debian 13 / Dovecot 2.4.1)
 protocols = imap
 
-# TLS (Dovecot 2.4 syntax)
+# TLS
 ssl = required
 ssl_server {
   cert_file = {{ ca_dir }}/mail.pem
   key_file  = {{ ca_dir }}/mail.key
 }
 
-# Auth via LDAP (Dovecot 2.4 syntax)
+# Auth via LDAP – inline config (Dovecot 2.4 tidak support "args")
 auth_mechanisms = plain login
 
 passdb ldap {
-  args = /etc/dovecot/dovecot-ldap.conf
+  hosts        = {{ ip_int_srv }}
+  dn           = cn=admin,dc=itnsa,dc=id
+  dnpass       = Skills39!
+  auth_bind    = yes
+  base         = ou=Employees,dc=itnsa,dc=id
+  pass_filter  = (&(objectClass=inetOrgPerson)(uid=%u))
 }
 
 userdb ldap {
-  args = /etc/dovecot/dovecot-ldap.conf
+  hosts        = {{ ip_int_srv }}
+  dn           = cn=admin,dc=itnsa,dc=id
+  dnpass       = Skills39!
+  base         = ou=Employees,dc=itnsa,dc=id
+  user_filter  = (&(objectClass=inetOrgPerson)(uid=%u))
+  user_attrs   = \
+    =uid=5000, \
+    =gid=5000, \
+    =home=/var/mail/vhosts/%Ld/%Ln, \
+    =mail=maildir:/var/mail/vhosts/%Ld/%Ln/Maildir
 }
 
 # Maildir
