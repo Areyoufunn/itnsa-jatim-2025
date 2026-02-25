@@ -9,19 +9,29 @@
     - ldap
     - ca
 
-- name: Distribute CA cert to all servers
+- name: Fetch certs from int-srv ke controller
+  hosts: int
+  tasks:
+    - name: Fetch semua cert ke controller
+      ansible.builtin.fetch:
+        src: "{{ ca_dir }}/{{ item }}"
+        dest: /tmp/certs/
+        flat: true
+      loop: [ca.pem, ca.key, web.pem, web.key, mail.pem, mail.key]
+
+- name: Distribute CA cert ke semua server
   hosts: all
   tasks:
-    - name: Copy CA cert from int-srv
-      ansible.builtin.shell:
-        cmd: scp -o StrictHostKeyChecking=no root@192.168.2.11:{{ ca_dir }}/ca.pem /usr/local/share/ca-certificates/itnsa-root-ca.crt
-        creates: /usr/local/share/ca-certificates/itnsa-root-ca.crt
+    - name: Install CA cert
+      ansible.builtin.copy:
+        src: /tmp/certs/ca.pem
+        dest: /usr/local/share/ca-certificates/itnsa-root-ca.crt
 
-    - name: Update CA certificates
+    - name: Update CA trust store
       ansible.builtin.command:
         cmd: update-ca-certificates
 
-- name: Copy certs to mail & web servers
+- name: Distribute certs ke mail & web servers
   hosts: dmz_mail:dmz_web
   tasks:
     - name: Create cert directory
@@ -30,16 +40,11 @@
         state: directory
         mode: '0755'
 
-    - name: Copy certs from int-srv
-      ansible.builtin.shell:
-        cmd: "scp -o StrictHostKeyChecking=no root@192.168.2.11:{{ ca_dir }}/{{ item }} {{ ca_dir }}/{{ item }}"
-        creates: "{{ ca_dir }}/{{ item }}"
-      loop:
-        - ca.pem
-        - web.pem
-        - web.key
-        - mail.pem
-        - mail.key
+    - name: Copy semua cert
+      ansible.builtin.copy:
+        src: "/tmp/certs/{{ item }}"
+        dest: "{{ ca_dir }}/{{ item }}"
+      loop: [ca.pem, web.pem, web.key, mail.pem, mail.key]
 
 - name: Mail Server
   hosts: dmz_mail
