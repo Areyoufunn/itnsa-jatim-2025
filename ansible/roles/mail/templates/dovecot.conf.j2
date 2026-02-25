@@ -2,6 +2,7 @@ dovecot_config_version = 2.4.1
 dovecot_storage_version = 2.4.1
 
 # Dovecot – dovecot.conf (Debian 13 / Dovecot 2.4.1)
+# Setting names verified from Dovecot source: db-ldap-settings.c
 protocols = imap
 
 # TLS
@@ -11,29 +12,25 @@ ssl_server {
   key_file  = {{ ca_dir }}/mail.key
 }
 
-# Auth via LDAP (ALL ldap settings use ldap_ prefix in 2.4)
+# Auth
 auth_mechanisms = plain login
 
+# LDAP connection settings (prefix: ldap_)
+ldap_uris             = ldap://{{ ip_int_srv }}
+ldap_auth_dn          = cn=admin,dc=itnsa,dc=id
+ldap_auth_dn_password = Skills39!
+ldap_base             = ou=Employees,dc=itnsa,dc=id
+
+# passdb (prefix: passdb_ldap_)
 passdb ldap {
-  ldap_uris             = ldap://{{ ip_int_srv }}
-  ldap_auth_dn          = cn=admin,dc=itnsa,dc=id
-  ldap_auth_dn_password = Skills39!
-  ldap_auth_bind        = yes
-  ldap_base             = ou=Employees,dc=itnsa,dc=id
-  ldap_pass_filter      = (&(objectClass=inetOrgPerson)(uid=%u))
+  passdb_ldap_bind   = yes
+  passdb_ldap_filter = (&(objectClass=inetOrgPerson)(uid=%u))
 }
 
+# userdb (prefix: userdb_ldap_)
 userdb ldap {
-  ldap_uris             = ldap://{{ ip_int_srv }}
-  ldap_auth_dn          = cn=admin,dc=itnsa,dc=id
-  ldap_auth_dn_password = Skills39!
-  ldap_base             = ou=Employees,dc=itnsa,dc=id
-  ldap_user_filter      = (&(objectClass=inetOrgPerson)(uid=%u))
-  ldap_user_attrs       = \
-    =uid=5000, \
-    =gid=5000, \
-    =home=/var/mail/vhosts/%Ld/%Ln, \
-    =mail=maildir:/var/mail/vhosts/%Ld/%Ln/Maildir
+  userdb_ldap_filter = (&(objectClass=inetOrgPerson)(uid=%u))
+  userdb_fields      = uid=5000 gid=5000 home=/var/mail/vhosts/%Ld/%Ln mail=maildir:/var/mail/vhosts/%Ld/%Ln/Maildir
 }
 
 # Maildir
