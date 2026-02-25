@@ -1,7 +1,7 @@
 ---
 - name: Install slapd dan ldap-utils
   ansible.builtin.apt:
-    name: [slapd, ldap-utils]
+    name: [slapd, ldap-utils, debconf-utils]
     state: present
     update_cache: true
   environment:
