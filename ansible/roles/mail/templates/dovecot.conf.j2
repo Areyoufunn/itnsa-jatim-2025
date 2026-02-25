@@ -30,7 +30,12 @@ passdb ldap {
 # userdb (prefix: userdb_ldap_)
 userdb ldap {
   userdb_ldap_filter = (&(objectClass=inetOrgPerson)(uid=%u))
-  userdb_fields      = uid=5000 gid=5000 home=/var/mail/vhosts/%Ld/%Ln mail=maildir:/var/mail/vhosts/%Ld/%Ln/Maildir
+  userdb_fields {
+    uid  = 5000
+    gid  = 5000
+    home = /var/mail/vhosts/%Ld/%Ln
+    mail = maildir:/var/mail/vhosts/%Ld/%Ln/Maildir
+  }
 }
 
 # Maildir
