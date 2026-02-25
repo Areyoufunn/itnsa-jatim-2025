@@ -11,16 +11,16 @@ ssl_server {
   key_file  = {{ ca_dir }}/mail.key
 }
 
-# Auth via LDAP (Dovecot 2.4 setting names)
+# Auth via LDAP (ALL ldap settings use ldap_ prefix in 2.4)
 auth_mechanisms = plain login
 
 passdb ldap {
   ldap_uris             = ldap://{{ ip_int_srv }}
   ldap_auth_dn          = cn=admin,dc=itnsa,dc=id
   ldap_auth_dn_password = Skills39!
-  auth_bind             = yes
+  ldap_auth_bind        = yes
   ldap_base             = ou=Employees,dc=itnsa,dc=id
-  pass_filter           = (&(objectClass=inetOrgPerson)(uid=%u))
+  ldap_pass_filter      = (&(objectClass=inetOrgPerson)(uid=%u))
 }
 
 userdb ldap {
@@ -28,8 +28,8 @@ userdb ldap {
   ldap_auth_dn          = cn=admin,dc=itnsa,dc=id
   ldap_auth_dn_password = Skills39!
   ldap_base             = ou=Employees,dc=itnsa,dc=id
-  user_filter           = (&(objectClass=inetOrgPerson)(uid=%u))
-  user_attrs            = \
+  ldap_user_filter      = (&(objectClass=inetOrgPerson)(uid=%u))
+  ldap_user_attrs       = \
     =uid=5000, \
     =gid=5000, \
     =home=/var/mail/vhosts/%Ld/%Ln, \
