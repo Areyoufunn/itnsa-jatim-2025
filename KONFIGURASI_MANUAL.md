@@ -1078,8 +1078,13 @@ cat /etc/wireguard/psk.key
 
 #### Konfigurasi `/etc/wireguard/wg0.conf`
 
+> ⚠️ **JANGAN start WireGuard dulu!** Generate key di client dulu (section 6.2),
+> lalu kembali ke sini untuk deploy config.
+
 ```bash
 SERVER_PRIVKEY=$(cat /etc/wireguard/server.key)
+CLIENT_PUBKEY=$(ssh root@192.168.2.16 'cat /etc/wireguard/client.pub')  # atau copy manual
+PSK=$(cat /etc/wireguard/psk.key)
 
 cat > /etc/wireguard/wg0.conf << EOF
 [Interface]
@@ -1093,18 +1098,15 @@ PostDown = nft delete rule ip nat postrouting oif eth0 masquerade
 
 # === Client: budi-clt ===
 [Peer]
-# PublicKey diisi setelah generate key di budi-clt
-PublicKey  = REPLACE_WITH_CLIENT_PUBKEY
-PresharedKey = $(cat /etc/wireguard/psk.key)
-AllowedIPs = 10.10.30.2/32
+PublicKey    = $CLIENT_PUBKEY
+PresharedKey = $PSK
+AllowedIPs   = 10.10.30.2/32
 EOF
 
 chmod 600 /etc/wireguard/wg0.conf
 ```
 
-> ⚠️ **Setelah client generate key**, ganti `REPLACE_WITH_CLIENT_PUBKEY` dengan output `cat /etc/wireguard/client.pub` dari budi-clt.
-
-#### Enable & Start
+#### Enable & Start (setelah client juga sudah deploy config)
 
 ```bash
 systemctl enable wg-quick@wg0
@@ -1133,7 +1135,7 @@ chmod 440 /etc/sudoers.d/budi
 #### Install & Generate Keys
 
 ```bash
-apt update && apt install -y wireguard wireguard-tools sudo
+apt update && apt install -y wireguard wireguard-tools sudo openresolv
 
 wg genkey | tee /etc/wireguard/client.key | wg pubkey > /etc/wireguard/client.pub
 chmod 600 /etc/wireguard/client.key
@@ -1146,6 +1148,8 @@ cat /etc/wireguard/client.pub
 
 ```bash
 CLIENT_PRIVKEY=$(cat /etc/wireguard/client.key)
+SERVER_PUBKEY=$(ssh root@192.168.2.15 'cat /etc/wireguard/server.pub')  # atau copy manual
+PSK=$(ssh root@192.168.2.15 'cat /etc/wireguard/psk.key')              # atau copy manual
 
 cat > /etc/wireguard/wg0.conf << EOF
 [Interface]
@@ -1155,8 +1159,8 @@ DNS        = 10.10.10.10
 
 # Server: fw.itnsa.id
 [Peer]
-PublicKey    = REPLACE_WITH_SERVER_PUBKEY
-PresharedKey = REPLACE_WITH_PSK
+PublicKey    = $SERVER_PUBKEY
+PresharedKey = $PSK
 Endpoint     = 100.100.100.254:51820
 AllowedIPs   = 0.0.0.0/0
 PersistentKeepalive = 25
@@ -1165,22 +1169,17 @@ EOF
 chmod 600 /etc/wireguard/wg0.conf
 ```
 
-> **Ganti:**
-> - `REPLACE_WITH_SERVER_PUBKEY` = output dari `cat /etc/wireguard/server.pub` di fw
-> - `REPLACE_WITH_PSK` = output dari `cat /etc/wireguard/psk.key` di fw
-
-#### Langkah Pertukaran Key
+#### Urutan Langkah Key Exchange
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│ 1. Di fw:     cat /etc/wireguard/server.pub  → COPY     │
-│ 2. Di fw:     cat /etc/wireguard/psk.key     → COPY     │
-│ 3. Di client: paste ke wg0.conf (PublicKey & PSK)        │
-│ 4. Di client: cat /etc/wireguard/client.pub  → COPY     │
-│ 5. Di fw:     paste ke wg0.conf PublicKey peer           │
-│ 6. Di fw:     wg-quick down wg0 && wg-quick up wg0      │
-│ 7. Di client: wg-quick up wg0                            │
-└──────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│ 1. Di fw:     generate keys (section 5.2)                      │
+│ 2. Di client: generate keys (section 6.2) + install openresolv │
+│ 3. Di fw:     deploy wg0.conf (ambil client.pub via SSH/manual)│
+│ 4. Di client: deploy wg0.conf (ambil server.pub+psk via SSH)   │
+│ 5. Di fw:     wg-quick up wg0                                  │
+│ 6. Di client: wg-quick up wg0                                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 #### Enable & Start
