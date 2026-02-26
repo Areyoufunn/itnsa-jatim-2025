@@ -38,8 +38,9 @@ userdb ldap {
   }
 }
 
-# Maildir
-mail_location = maildir:/var/mail/vhosts/%d/%n/Maildir
+# Maildir (Dovecot 2.4: mail_location split into mail_driver + mail_path)
+mail_driver = maildir
+mail_path = /var/mail/vhosts/%d/%n/Maildir
 
 # Namespace
 namespace inbox {
