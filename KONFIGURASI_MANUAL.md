@@ -992,9 +992,9 @@ table inet filter {
         iif $INT oif $WAN accept
         iif $DMZ oif $WAN accept
 
-        # [Soal 4] VPN client ke INT & DMZ
-        iif wg0 oif $INT accept
-        iif wg0 oif $DMZ accept
+        # [Soal 4] VPN client ke INT & DMZ (iifname karena wg0 belum tentu ada saat boot)
+        iifname "wg0" oif $INT accept
+        iifname "wg0" oif $DMZ accept
 
         # [Soal 5] Mail → LDAP (port 389)
         iif $DMZ oif $INT ip saddr $IP_MAIL ip daddr $IP_LDAP tcp dport 389 accept
