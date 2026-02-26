@@ -1,7 +1,7 @@
 ---
 - name: Install wireguard
   ansible.builtin.apt:
-    name: [wireguard, wireguard-tools, sudo]
+    name: [wireguard, wireguard-tools, sudo, openresolv]
     state: present
     update_cache: true
 
