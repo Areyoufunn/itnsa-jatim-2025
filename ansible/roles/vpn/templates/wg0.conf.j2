@@ -9,7 +9,6 @@ PostDown = nft delete rule ip nat postrouting oif eth0 masquerade
 
 # === Client: budi-clt ===
 [Peer]
-# PublicKey diisi manual setelah generate key di budi-clt
-PublicKey  = REPLACE_WITH_CLIENT_PUBKEY
-PresharedKey = REPLACE_WITH_PSK
-AllowedIPs = {{ wg_client_ip }}/32
+PublicKey    = {{ client_pubkey }}
+PresharedKey = {{ psk }}
+AllowedIPs   = {{ wg_client_ip }}/32

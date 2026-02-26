@@ -5,9 +5,8 @@ DNS        = {{ ip_int_srv }}
 
 # Server: fw.itnsa.id
 [Peer]
-# PublicKey diisi dengan: cat /etc/wireguard/server.pub  (dari fw)
-PublicKey    = REPLACE_WITH_SERVER_PUBKEY
-PresharedKey = REPLACE_WITH_PSK
+PublicKey    = {{ server_pubkey }}
+PresharedKey = {{ psk }}
 Endpoint     = 100.100.100.254:{{ wg_port }}
 AllowedIPs   = 0.0.0.0/0
 PersistentKeepalive = 25

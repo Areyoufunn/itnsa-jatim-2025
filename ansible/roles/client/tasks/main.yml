@@ -28,23 +28,3 @@
   ansible.builtin.file:
     path: /etc/wireguard/client.key
     mode: '0600'
-
-- name: Baca client private key
-  ansible.builtin.slurp:
-    src: /etc/wireguard/client.key
-  register: wg_client_key
-
-- name: Deploy wg0.conf client
-  ansible.builtin.template:
-    src: wg0-client.conf.j2
-    dest: /etc/wireguard/wg0.conf
-    mode: '0600'
-  vars:
-    privkey: "{{ wg_client_key.content | b64decode | trim }}"
-
-- name: Enable dan start wg-quick@wg0
-  ansible.builtin.systemd:
-    name: wg-quick@wg0
-    state: started
-    enabled: true
-    daemon_reload: true

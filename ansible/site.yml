@@ -66,12 +66,80 @@
   roles:
     - firewall
 
-- name: WireGuard VPN Server
+# === WireGuard: generate keys dulu di kedua sisi ===
+- name: WireGuard VPN Server (generate keys)
   hosts: fw
   roles:
     - vpn
 
-- name: Client Setup
+- name: Client Setup (generate keys + user)
   hosts: client
   roles:
     - client
+
+# === Key Exchange: fetch keys, deploy config, start WG ===
+- name: WireGuard Key Exchange & Deploy
+  hosts: fw:client
+  tasks:
+    # --- Baca semua keys ---
+    - name: Baca server private key
+      ansible.builtin.slurp:
+        src: /etc/wireguard/server.key
+      register: wg_server_privkey
+      when: inventory_hostname == 'fw'
+
+    - name: Baca server public key
+      ansible.builtin.slurp:
+        src: /etc/wireguard/server.pub
+      register: wg_server_pubkey
+      when: inventory_hostname == 'fw'
+
+    - name: Baca PSK
+      ansible.builtin.slurp:
+        src: /etc/wireguard/psk.key
+      register: wg_psk
+      when: inventory_hostname == 'fw'
+
+    - name: Baca client private key
+      ansible.builtin.slurp:
+        src: /etc/wireguard/client.key
+      register: wg_client_privkey
+      when: inventory_hostname == 'budi-clt'
+
+    - name: Baca client public key
+      ansible.builtin.slurp:
+        src: /etc/wireguard/client.pub
+      register: wg_client_pubkey
+      when: inventory_hostname == 'budi-clt'
+
+    # --- Deploy wg0.conf di server (fw) ---
+    - name: Deploy wg0.conf di fw
+      ansible.builtin.template:
+        src: roles/vpn/templates/wg0.conf.j2
+        dest: /etc/wireguard/wg0.conf
+        mode: '0600'
+      vars:
+        privkey: "{{ wg_server_privkey.content | b64decode | trim }}"
+        client_pubkey: "{{ hostvars['budi-clt']['wg_client_pubkey']['content'] | b64decode | trim }}"
+        psk: "{{ hostvars['fw']['wg_psk']['content'] | b64decode | trim }}"
+      when: inventory_hostname == 'fw'
+
+    # --- Deploy wg0.conf di client (budi-clt) ---
+    - name: Deploy wg0.conf di budi-clt
+      ansible.builtin.template:
+        src: roles/client/templates/wg0-client.conf.j2
+        dest: /etc/wireguard/wg0.conf
+        mode: '0600'
+      vars:
+        privkey: "{{ wg_client_privkey.content | b64decode | trim }}"
+        server_pubkey: "{{ hostvars['fw']['wg_server_pubkey']['content'] | b64decode | trim }}"
+        psk: "{{ hostvars['fw']['wg_psk']['content'] | b64decode | trim }}"
+      when: inventory_hostname == 'budi-clt'
+
+    # --- Start WireGuard di kedua sisi ---
+    - name: Enable dan start wg-quick@wg0
+      ansible.builtin.systemd:
+        name: wg-quick@wg0
+        state: restarted
+        enabled: true
+        daemon_reload: true
